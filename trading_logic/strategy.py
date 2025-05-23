@@ -38,8 +38,6 @@ class BaseStrategy():
         sock.connect("ipc:///tmp/main_feed")
         sock.subscribe(b'')
 
-        print("logging up")
-
         while True:
             packet: NormalizedPacket = sock.recv_pyobj()
             if packet.packet_type != PacketType.OTHER:

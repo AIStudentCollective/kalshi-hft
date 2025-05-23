@@ -15,34 +15,14 @@ from exchange_interface.publishers import Publishers
 from exchange_interface.kalshi_client import KalshiHttpClient, Environment
 
 from trading_logic.strategy import BaseStrategy
-
+from scripts.utils import signal_handler, create_shutdown_handler
 import signal
 from time import sleep
-
-def signal_handler(sig, frame, workers):
-    print("Shutting down all markets...")
-    for name, worker in workers.items():
-        worker.terminate()
-        worker.join()
-    print("All markets stopped.")
-    exit(0)
-
-def create_shutdown_handler(workers):
-    def shutdown(signum, frame):
-        """Handles shutdown signals (e.g., Ctrl+C or system shutdown)."""
-        print("\nShutting down all processes...")
-        for name, p in workers.items():
-            print(f"Stopping {name}...")
-            p.terminate()
-            p.join()
-        print("All processes stopped.")
-        exit(0)
-    return shutdown
 
 def main(): 
     dotenv.load_dotenv()
 
-    log_file = "logging/messages-1747509880.3028429.log"
+    log_file = "logging/messages-1748022111.1667926.log"
     key_id = os.getenv("KEY_ID")
     private_key_path = os.getenv("KEY_PATH")
     key = KalshiHttpClient.load_private_key_from_file(private_key_path)
@@ -50,13 +30,15 @@ def main():
     http_client = KalshiHttpClient(key_id=key_id, private_key=key, environment=Environment.PROD)
 
     # specify a list of tickers to subscribe to
-    tickers = ["KXHIGHNY-25APR03-B70.5"]
+    tickers = ["KXHIGHNY-25MAY23-B60.5"]
 
     # only spawning one strategy process, should create one per ticker
     strat = BaseStrategy(http_client, tickers[0], MAX_LATENCY=None)
 
     broker = Publishers.broker()
-    backtest_publisher = Publishers.backtest_publisher(log_file)
+
+    # grace period sets time to wait for subscribers
+    backtest_publisher = Publishers.backtest_publisher(log_file, grace_period=1)
 
     workers = {
         "broker": Process(
