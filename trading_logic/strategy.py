@@ -66,7 +66,7 @@ class BaseStrategy():
         # If packet is too old, we just ignore it and dont trade on it 
         if self.MAX_LATENCY is not None and time.time() - packet.timestamp > self.MAX_LATENCY:
             return
-        
+
         self.strategy(packet)
 
     def strategy(self, packet):

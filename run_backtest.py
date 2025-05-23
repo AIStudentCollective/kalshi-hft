@@ -32,29 +32,33 @@ def main():
     # specify a list of tickers to subscribe to
     tickers = ["KXHIGHNY-25MAY23-B60.5"]
 
-    # only spawning one strategy process, should create one per ticker
-    strat = BaseStrategy(http_client, tickers[0], MAX_LATENCY=None)
-
     broker = Publishers.broker()
 
-    # grace period sets time to wait for subscribers
-    backtest_publisher = Publishers.backtest_publisher(log_file, grace_period=1)
-
-    workers = {
-        "broker": Process(
+    workers = [
+        Process(
             target=asyncio.run,
             kwargs={"main": broker}
-        ),
-        "strat": Process(
-            target=strat.handler
-        ),
-        "backtest_pub": Process(
+        )
+    ]
+
+    for ticker in tickers:
+        # create new strategy process for each ticker
+        strat = BaseStrategy(http_client, ticker, MAX_LATENCY=None)
+        workers.append(
+            Process(
+                target=strat.handler
+            )
+        )
+
+    
+    # grace period sets time to wait for subscribers
+    backtest_publisher = Publishers.backtest_publisher(log_file, grace_period=1)
+    workers.append(Process(
             target=asyncio.run,
             kwargs={"main": backtest_publisher}
         )
-    }
-
-    for w in workers.values():
+    )
+    for w in workers:
         w.start()
 
     shutdown_handler = create_shutdown_handler(workers)

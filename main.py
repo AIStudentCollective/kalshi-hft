@@ -35,6 +35,7 @@ def main():
 
     broker = Publishers.broker()
     kalshi_publisher = Publishers.kalshi_publisher(key_id, key, http_client, tickers)
+
     # add process for broker and logging
     workers = [
         Process(
@@ -43,15 +44,17 @@ def main():
         ), 
         Process(target=LoggingSubscriber.logging),
     ]
+
     # add each new strat
     for ticker in tickers:
         # create new strategy process for each ticker
-        strat = BaseStrategy(http_client, tickers[0], MAX_LATENCY=0.01)
+        strat = BaseStrategy(http_client, ticker, MAX_LATENCY=0.01)
         workers.append(
             Process(
                 target=strat.handler
             )
         )
+
     # add publisher
     workers.append(Process(
             target=asyncio.run,
