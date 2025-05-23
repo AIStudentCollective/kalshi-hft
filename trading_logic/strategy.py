@@ -25,7 +25,7 @@ class CancelOrderException(Exception):
 
 
 class BaseStrategy():
-    def __init__(self, http_client, ticker, MAX_LATENCY=0.01):  
+    def __init__(self, http_client, ticker, MAX_LATENCY=None):  
         self.book = OrderBook()
         self.http_client = http_client 
         self.ticker = ticker
@@ -66,7 +66,7 @@ class BaseStrategy():
                     self.book.add_order(Side.ASK, 100 - packet.data['price'], packet.data['delta'])
 
         # If packet is too old, we just ignore it and dont trade on it 
-        if time.time() - packet.timestamp > self.MAX_LATENCY:
+        if self.MAX_LATENCY is not None and time.time() - packet.timestamp > self.MAX_LATENCY:
             return
         
         self.strategy(packet)
@@ -119,15 +119,14 @@ class BaseStrategy():
                 "type": "limit",
                 "client_order_id": id
             }
-
         try:
-            self.accountData.placeOrder(order_data, "/trade-api/v2/portfolio/orders") 
+            self.http_client.placeOrder(order_data, "/trade-api/v2/portfolio/orders") 
         except Exception as e:
             raise LimitOrderException()
  
     def cancel_order(self, order_id: str, side) -> Any:
         try:
-            self.accountData.delete(
+            self.http_client.delete(
                 path=f"/trade-api/v2/portfolio/orders/{order_id}"
             )
         except HTTPError as e:

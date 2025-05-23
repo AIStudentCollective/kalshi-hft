@@ -5,10 +5,10 @@ import os
 from cryptography.hazmat.primitives import serialization
 from datetime import datetime
 
-from pytz import timezone
-
 import asyncio
 import zmq
+
+import dotenv
 
 from multiprocessing import Process
 from exchange_interface.publishers import Publishers
@@ -39,18 +39,21 @@ def create_shutdown_handler(workers):
         exit(0)
     return shutdown
 
-def main():
-    log_file = "logging/messages-1747509880.3028429.log"
+def main(): 
+    dotenv.load_dotenv()
 
+    log_file = "logging/messages-1747509880.3028429.log"
     key_id = os.getenv("KEY_ID")
-    private_key_path = "keys/prod.txt"
+    private_key_path = os.getenv("KEY_PATH")
     key = KalshiHttpClient.load_private_key_from_file(private_key_path)
 
     http_client = KalshiHttpClient(key_id=key_id, private_key=key, environment=Environment.PROD)
 
+    # specify a list of tickers to subscribe to
     tickers = ["KXHIGHNY-25APR03-B70.5"]
 
-    strat = BaseStrategy(http_client, tickers[0], MAX_LATENCY=0.01)
+    # only spawning one strategy process, should create one per ticker
+    strat = BaseStrategy(http_client, tickers[0], MAX_LATENCY=None)
 
     broker = Publishers.broker()
     backtest_publisher = Publishers.backtest_publisher(log_file)

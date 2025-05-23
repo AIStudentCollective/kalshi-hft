@@ -16,6 +16,8 @@ import signal
 
 from trading_logic.strategy import BaseStrategy 
 
+import dotenv
+
 def signal_handler(sig, frame, workers):
     print("Shutting down all markets...")
     for name, worker in workers.items():
@@ -37,8 +39,10 @@ def create_shutdown_handler(workers):
     return shutdown
 
 def main():
+    dotenv.load_dotenv()
+
     key_id = os.getenv("KEY_ID")
-    private_key_path = "keys/prod.txt"
+    private_key_path = os.getenv("KEY_PATH")
     key = KalshiHttpClient.load_private_key_from_file(private_key_path)
 
     http_client = KalshiHttpClient(key_id=key_id, private_key=key, environment=Environment.PROD)

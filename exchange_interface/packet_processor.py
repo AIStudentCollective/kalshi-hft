@@ -39,7 +39,7 @@ class Processor():
 
        return NormalizedPacket(Source[jpacket['source']], jpacket['timestamp'], PacketType[jpacket['packet_type']], jpacket['data']) 
 
-    # Converts raw kalshi packet into 
+    # Converts raw kalshi packet into normalized format
     def process_kalshi(packet: str) -> NormalizedPacket:
         curr_time = time.time()
 
