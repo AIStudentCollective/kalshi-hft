@@ -45,6 +45,10 @@ Run the main trading script:
 ```bash
 python main.py
 ```
+
+## Architecture
+![alt text](https://raw.githubusercontent.com/AIStudentCollective/kalshi-hft/refs/heads/main/architecture.png "System Architecture")
+
 ## FAQ
 
 ### How do I add a custom strategy?
